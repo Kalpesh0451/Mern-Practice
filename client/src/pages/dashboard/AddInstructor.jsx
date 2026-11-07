@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createInstructor } from "../../services/instructorService";
@@ -5,7 +6,7 @@ import { createInstructor } from "../../services/instructorService";
 function AddInstructor() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     fullName: "",
     email: "",
     mobileNumber: "",
@@ -13,9 +14,12 @@ function AddInstructor() {
     qualification: "",
     experience: "",
     status: "Active",
-  });
+  };
 
+  const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,16 +28,73 @@ function AddInstructor() {
       ...prev,
       [name]: value,
     }));
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    setError("");
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.fullName.trim()) {
+      errors.fullName = "Full name is required.";
+    } else if (!/^[a-zA-Z\s.'-]+$/.test(formData.fullName.trim())) {
+      errors.fullName = "Enter a valid name.";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = "Enter a valid email address.";
+    }
+
+    if (!/^[0-9]{10}$/.test(formData.mobileNumber)) {
+      errors.mobileNumber = "Enter a valid 10-digit mobile number.";
+    }
+
+    if (!formData.specialization.trim()) {
+      errors.specialization = "Specialization is required.";
+    } else if (formData.specialization.trim().length < 2) {
+      errors.specialization = "Enter a valid specialization.";
+    }
+
+    if (!formData.qualification.trim()) {
+      errors.qualification = "Qualification is required.";
+    }
+
+    if (formData.experience === "") {
+      errors.experience = "Experience is required.";
+    } else if (
+      !Number.isFinite(Number(formData.experience)) ||
+      Number(formData.experience) < 0
+    ) {
+      errors.experience = "Experience cannot be negative.";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (!validateForm()) return;
 
     try {
       setLoading(true);
 
       await createInstructor({
         ...formData,
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        mobileNumber: formData.mobileNumber,
+        specialization: formData.specialization.trim(),
+        qualification: formData.qualification.trim(),
         experience: Number(formData.experience),
       });
 
@@ -41,12 +102,18 @@ function AddInstructor() {
       navigate("/dashboard/instructors");
     } catch (error) {
       console.error("Error adding instructor:", error);
-      alert(
+      setError(
         error.response?.data?.message || "Failed to add instructor."
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReset = () => {
+    setFormData(initialFormData);
+    setFieldErrors({});
+    setError("");
   };
 
   return (
@@ -66,19 +133,25 @@ function AddInstructor() {
 
       <div className="card shadow-sm border-0">
         <div className="card-body p-4">
-          <form onSubmit={handleSubmit}>
+          {error && (
+            <div className="alert alert-danger">{error}</div>
+          )}
+
+          <form onSubmit={handleSubmit} noValidate>
             <div className="row g-3">
               <div className="col-md-6">
                 <label className="form-label">Full Name</label>
                 <input
                   type="text"
                   name="fullName"
-                  className="form-control"
+                  className={`form-control ${fieldErrors.fullName ? "is-invalid" : ""}`}
                   placeholder="Enter full name"
                   value={formData.fullName}
                   onChange={handleChange}
-                  required
                 />
+                {fieldErrors.fullName && (
+                  <div className="invalid-feedback">{fieldErrors.fullName}</div>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -86,12 +159,14 @@ function AddInstructor() {
                 <input
                   type="email"
                   name="email"
-                  className="form-control"
+                  className={`form-control ${fieldErrors.email ? "is-invalid" : ""}`}
                   placeholder="Enter email address"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                 />
+                {fieldErrors.email && (
+                  <div className="invalid-feedback">{fieldErrors.email}</div>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -99,12 +174,20 @@ function AddInstructor() {
                 <input
                   type="tel"
                   name="mobileNumber"
-                  className="form-control"
-                  placeholder="Enter mobile number"
+                  className={`form-control ${fieldErrors.mobileNumber ? "is-invalid" : ""}`}
+                  placeholder="Enter 10-digit mobile number"
+                  maxLength="10"
                   value={formData.mobileNumber}
-                  onChange={handleChange}
-                  required
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    handleChange({
+                      target: { name: "mobileNumber", value },
+                    });
+                  }}
                 />
+                {fieldErrors.mobileNumber && (
+                  <div className="invalid-feedback">{fieldErrors.mobileNumber}</div>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -112,12 +195,14 @@ function AddInstructor() {
                 <input
                   type="text"
                   name="specialization"
-                  className="form-control"
+                  className={`form-control ${fieldErrors.specialization ? "is-invalid" : ""}`}
                   placeholder="e.g. Full Stack Development"
                   value={formData.specialization}
                   onChange={handleChange}
-                  required
                 />
+                {fieldErrors.specialization && (
+                  <div className="invalid-feedback">{fieldErrors.specialization}</div>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -125,12 +210,14 @@ function AddInstructor() {
                 <input
                   type="text"
                   name="qualification"
-                  className="form-control"
+                  className={`form-control ${fieldErrors.qualification ? "is-invalid" : ""}`}
                   placeholder="e.g. M.Tech Computer Science"
                   value={formData.qualification}
                   onChange={handleChange}
-                  required
                 />
+                {fieldErrors.qualification && (
+                  <div className="invalid-feedback">{fieldErrors.qualification}</div>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -138,13 +225,16 @@ function AddInstructor() {
                 <input
                   type="number"
                   name="experience"
-                  className="form-control"
+                  className={`form-control ${fieldErrors.experience ? "is-invalid" : ""}`}
                   placeholder="Enter experience"
                   min="0"
+                  step="0.1"
                   value={formData.experience}
                   onChange={handleChange}
-                  required
                 />
+                {fieldErrors.experience && (
+                  <div className="invalid-feedback">{fieldErrors.experience}</div>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -168,6 +258,15 @@ function AddInstructor() {
                 disabled={loading}
               >
                 {loading ? "Saving..." : "Save Instructor"}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={handleReset}
+                disabled={loading}
+              >
+                Reset
               </button>
 
               <Link

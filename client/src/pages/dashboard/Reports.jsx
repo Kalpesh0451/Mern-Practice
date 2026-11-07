@@ -1,6 +1,5 @@
 
 import { useCallback, useEffect, useState } from "react";
-
 import {
   getDashboardStats,
   getEnrollmentTrend,
@@ -21,7 +20,6 @@ import {
 
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -36,11 +34,12 @@ ChartJS.register(
 
 function Reports() {
   const [stats, setStats] = useState(null);
+  const [recentEnrollments, setRecentEnrollments] = useState([]);
+  const [courseDistribution, setCourseDistribution] = useState([]);
   const [enrollmentData, setEnrollmentData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch all report data
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
@@ -51,163 +50,27 @@ function Reports() {
         getEnrollmentTrend(),
       ]);
 
-      setStats(statsResponse.statistics);
-      setEnrollmentData(enrollmentResponse.enrollmentData || []);
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-      setError("Unable to load reports. Please try again.");
+      // Match the actual backend response properties
+      setStats(statsResponse.stats);
+      setRecentEnrollments(statsResponse.recentEnrollments || []);
+      setCourseDistribution(statsResponse.courseDistribution || []);
+      setEnrollmentData(enrollmentResponse.enrollmentTrend || []);
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+      setError(
+        err.response?.data?.message ||
+        "Unable to load reports. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Load reports when component mounts
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
 
-  // Initial loading
-  if (loading && !stats) {
-    return (
-      <div className="container-fluid p-4">
-        <div className="text-center">
-          <div className="spinner-border text-primary"></div>
-          <p className="mt-2">Loading reports...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (!stats && error) {
-    return (
-      <div className="container-fluid p-4">
-        <div className="alert alert-danger">{error}</div>
-
-        <button
-          className="btn btn-primary"
-          onClick={fetchReports}
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
-  if (!stats) return null;
-
-  // Statistics cards
-  const cards = [
-    {
-      title: "Total Students",
-      value: stats.totalStudents,
-      color: "primary",
-      icon: "bi-people-fill",
-    },
-    {
-      title: "Total Courses",
-      value: stats.totalCourses,
-      color: "success",
-      icon: "bi-book-fill",
-    },
-    {
-      title: "Total Instructors",
-      value: stats.totalInstructors,
-      color: "warning",
-      icon: "bi-person-badge-fill",
-    },
-    {
-      title: "Active Courses",
-      value: stats.activeCourses,
-      color: "success",
-      icon: "bi-check-circle-fill",
-    },
-    {
-      title: "Inactive Courses",
-      value: stats.inactiveCourses,
-      color: "danger",
-      icon: "bi-x-circle-fill",
-    },
-    {
-      title: "Active Instructors",
-      value: stats.activeInstructors,
-      color: "primary",
-      icon: "bi-person-check-fill",
-    },
-    {
-      title: "Inactive Instructors",
-      value: stats.inactiveInstructors,
-      color: "secondary",
-      icon: "bi-person-x-fill",
-    },
-  ];
-
-  // Overall statistics bar chart
-  const barData = {
-    labels: ["Students", "Courses", "Instructors"],
-    datasets: [
-      {
-        label: "Total Records",
-        data: [
-          stats.totalStudents,
-          stats.totalCourses,
-          stats.totalInstructors,
-        ],
-        backgroundColor: ["#0d6efd", "#198754", "#ffc107"],
-        borderRadius: 8,
-      },
-    ],
-  };
-
-  // Course status doughnut chart
-  const courseData = {
-    labels: ["Active Courses", "Inactive Courses"],
-    datasets: [
-      {
-        data: [stats.activeCourses, stats.inactiveCourses],
-        backgroundColor: ["#198754", "#dc3545"],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  // Instructor status doughnut chart
-  const instructorData = {
-    labels: ["Active Instructors", "Inactive Instructors"],
-    datasets: [
-      {
-        data: [
-          stats.activeInstructors,
-          stats.inactiveInstructors,
-        ],
-        backgroundColor: ["#0d6efd", "#ffc107"],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  // Student enrollment trend line chart
-  const enrollmentChartData = {
-    labels: enrollmentData.map((item) => item.month),
-    datasets: [
-      {
-        label: "Students Registered",
-        data: enrollmentData.map((item) => item.totalStudents),
-        borderColor: "#0d6efd",
-        backgroundColor: "rgba(13, 110, 253, 0.15)",
-        pointBackgroundColor: "#0d6efd",
-        pointBorderColor: "#ffffff",
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true,
-      },
-    ],
-  };
-
-  // Common chart options
-  const commonChartOptions = {
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: true,
     plugins: {
@@ -217,10 +80,158 @@ function Reports() {
     },
   };
 
+  if (loading && !stats) {
+    return (
+      <div className="container-fluid p-4 text-center">
+        <div className="spinner-border text-primary"></div>
+        <p className="mt-2">Loading reports...</p>
+      </div>
+    );
+  }
+
+  if (!stats && error) {
+    return (
+      <div className="container-fluid p-4">
+        <div className="alert alert-danger">{error}</div>
+        <button className="btn btn-primary" onClick={fetchReports}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  const cards = [
+    {
+      title: "Total Students",
+      value: stats.totalStudents,
+      icon: "bi-people-fill",
+      color: "primary",
+    },
+    {
+      title: "Total Courses",
+      value: stats.totalCourses,
+      icon: "bi-book-fill",
+      color: "success",
+    },
+    {
+      title: "Total Enrollments",
+      value: stats.totalEnrollments,
+      icon: "bi-journal-check",
+      color: "info",
+    },
+    {
+      title: "Active Courses",
+      value: stats.activeCourses,
+      icon: "bi-check-circle-fill",
+      color: "success",
+    },
+    {
+      title: "Active Enrollments",
+      value: stats.activeEnrollments,
+      icon: "bi-person-check-fill",
+      color: "primary",
+    },
+    {
+      title: "Completed Enrollments",
+      value: stats.completedEnrollments,
+      icon: "bi-patch-check-fill",
+      color: "warning",
+    },
+    {
+      title: "Cancelled Enrollments",
+      value: stats.cancelledEnrollments,
+      icon: "bi-x-circle-fill",
+      color: "danger",
+    },
+  ];
+
+  const overallData = {
+    labels: ["Students", "Courses", "Enrollments"],
+    datasets: [
+      {
+        label: "Total Records",
+        data: [
+          stats.totalStudents,
+          stats.totalCourses,
+          stats.totalEnrollments,
+        ],
+        backgroundColor: ["#0d6efd", "#198754", "#ffc107"],
+        borderRadius: 8,
+      },
+    ],
+  };
+
+  const courseStatusData = {
+    labels: ["Active Courses", "Inactive Courses"],
+    datasets: [
+      {
+        data: [
+          stats.activeCourses,
+          Math.max(0, stats.totalCourses - stats.activeCourses),
+        ],
+        backgroundColor: ["#198754", "#dc3545"],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const enrollmentStatusData = {
+    labels: ["Active", "Completed", "Cancelled"],
+    datasets: [
+      {
+        data: [
+          stats.activeEnrollments,
+          stats.completedEnrollments,
+          stats.cancelledEnrollments,
+        ],
+        backgroundColor: ["#0d6efd", "#198754", "#dc3545"],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const enrollmentChartData = {
+    labels: enrollmentData.map((item) => `${item.month} ${item.year}`),
+    datasets: [
+      {
+        label: "Enrollments",
+        data: enrollmentData.map((item) => item.enrollments),
+        borderColor: "#0d6efd",
+        backgroundColor: "rgba(13, 110, 253, 0.15)",
+        pointBackgroundColor: "#0d6efd",
+        pointRadius: 5,
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+
+  const courseDistributionData = {
+    labels: courseDistribution.map((item) => item.courseName),
+    datasets: [
+      {
+        label: "Enrollments",
+        data: courseDistribution.map((item) => item.enrollmentCount),
+        backgroundColor: [
+          "#0d6efd",
+          "#198754",
+          "#ffc107",
+          "#dc3545",
+          "#6f42c1",
+          "#20c997",
+          "#fd7e14",
+        ],
+        borderRadius: 6,
+      },
+    ],
+  };
+
   return (
     <div className="container-fluid">
-
-      {/* Page Heading */}
+      {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
           <h2>Reports & Analytics</h2>
@@ -239,11 +250,8 @@ function Reports() {
         </button>
       </div>
 
-      {/* Error Message */}
       {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
+        <div className="alert alert-danger">{error}</div>
       )}
 
       {/* Statistics Cards */}
@@ -253,13 +261,8 @@ function Reports() {
             <div className="card shadow-sm border-0 h-100">
               <div className="card-body d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-2">
-                    {card.title}
-                  </p>
-
-                  <h2 className="fw-bold mb-0">
-                    {card.value ?? 0}
-                  </h2>
+                  <p className="text-muted mb-2">{card.title}</p>
+                  <h2 className="fw-bold mb-0">{card.value ?? 0}</h2>
                 </div>
 
                 <div
@@ -273,23 +276,18 @@ function Reports() {
         ))}
       </div>
 
-      {/* Existing Charts */}
-      <div className="row g-4">
-
-        {/* Overall Statistics */}
+      {/* Overall Statistics and Status Charts */}
+      <div className="row g-4 mb-4">
         <div className="col-lg-7">
           <div className="card shadow-sm border-0 h-100">
             <div className="card-body">
               <h5 className="mb-4">Overall Statistics</h5>
-
               <Bar
-                data={barData}
+                data={overallData}
                 options={{
-                  ...commonChartOptions,
+                  ...chartOptions,
                   plugins: {
-                    legend: {
-                      display: false,
-                    },
+                    legend: { display: false },
                   },
                 }}
               />
@@ -297,74 +295,143 @@ function Reports() {
           </div>
         </div>
 
-        {/* Status Charts */}
         <div className="col-lg-5">
-
-          {/* Course Status */}
           <div className="card shadow-sm border-0 mb-4">
             <div className="card-body">
               <h5 className="mb-4">Course Status</h5>
-
               <div style={{ maxWidth: "260px", margin: "auto" }}>
-                <Doughnut
-                  data={courseData}
-                  options={commonChartOptions}
-                />
+                <Doughnut data={courseStatusData} options={chartOptions} />
               </div>
             </div>
           </div>
 
-          {/* Instructor Status */}
           <div className="card shadow-sm border-0">
             <div className="card-body">
-              <h5 className="mb-4">Instructor Status</h5>
-
+              <h5 className="mb-4">Enrollment Status</h5>
               <div style={{ maxWidth: "260px", margin: "auto" }}>
                 <Doughnut
-                  data={instructorData}
-                  options={commonChartOptions}
+                  data={enrollmentStatusData}
+                  options={chartOptions}
                 />
               </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Student Enrollment Trend */}
-      <div className="row mt-4 mb-4">
-        <div className="col-12">
-          <div className="card shadow-sm border-0">
-            <div className="card-body">
-              <h5 className="mb-4">
-                Student Enrollment Trend
-              </h5>
-
-              {enrollmentData.length > 0 ? (
-                <Line
-                  data={enrollmentChartData}
-                  options={{
-                    ...commonChartOptions,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          precision: 0,
-                        },
-                      },
-                    },
-                  }}
-                />
-              ) : (
-                <p className="text-muted text-center py-4">
-                  No enrollment data available.
-                </p>
-              )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Enrollment Trend */}
+      <div className="card shadow-sm border-0 mb-4">
+        <div className="card-body">
+          <h5 className="mb-4">Monthly Enrollment Trend</h5>
+
+          {enrollmentData.length > 0 ? (
+            <Line
+              data={enrollmentChartData}
+              options={{
+                ...chartOptions,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                  },
+                },
+              }}
+            />
+          ) : (
+            <p className="text-muted text-center py-4">
+              No enrollment data available.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Course-wise Distribution */}
+      <div className="card shadow-sm border-0 mb-4">
+        <div className="card-body">
+          <h5 className="mb-4">Course-wise Enrollment Distribution</h5>
+
+          {courseDistribution.length > 0 ? (
+            <Bar
+              data={courseDistributionData}
+              options={{
+                ...chartOptions,
+                indexAxis: "y",
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                  },
+                },
+              }}
+            />
+          ) : (
+            <p className="text-muted text-center py-4">
+              No course distribution data available.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Enrollments */}
+      <div className="card shadow-sm border-0 mb-4">
+        <div className="card-body">
+          <h5 className="mb-4">Recent Enrollments</h5>
+
+          <div className="table-responsive">
+            <table className="table table-hover align-middle">
+              <thead className="table-light">
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Enrollment Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {recentEnrollments.length > 0 ? (
+                  recentEnrollments.map((enrollment) => (
+                    <tr key={enrollment._id}>
+                      <td>
+                        {enrollment.student?.fullName || "Student unavailable"}
+                      </td>
+                      <td>
+                        {enrollment.course?.courseName || "Course unavailable"}
+                      </td>
+                      <td>
+                        {enrollment.enrollmentDate
+                          ? new Date(
+                              enrollment.enrollmentDate
+                            ).toLocaleDateString()
+                          : "-"}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            enrollment.status === "Active"
+                              ? "bg-success"
+                              : enrollment.status === "Completed"
+                              ? "bg-primary"
+                              : "bg-danger"
+                          }`}
+                        >
+                          {enrollment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center text-muted py-4">
+                      No recent enrollments found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -13,25 +13,25 @@ function AddEnrollment() {
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     student: "",
     course: "",
     enrollmentDate: new Date().toISOString().split("T")[0],
     status: "Active",
-  });
+  };
 
+  const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  // Fetch students and courses
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentResponse, courseResponse] =
-          await Promise.all([
-            axios.get(STUDENT_API),
-            axios.get(COURSE_API),
-          ]);
+        const [studentResponse, courseResponse] = await Promise.all([
+          axios.get(STUDENT_API),
+          axios.get(COURSE_API),
+        ]);
 
         const studentData = studentResponse.data;
         const courseData = courseResponse.data;
@@ -39,13 +39,13 @@ function AddEnrollment() {
         setStudents(
           Array.isArray(studentData)
             ? studentData
-            : studentData.students || []
+            : studentData.students || studentData.data || []
         );
 
         setCourses(
           Array.isArray(courseData)
             ? courseData
-            : courseData.courses || []
+            : courseData.courses || courseData.data || []
         );
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -56,7 +56,6 @@ function AddEnrollment() {
     fetchData();
   }, []);
 
-  // Handle form changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -64,20 +63,61 @@ function AddEnrollment() {
       ...prev,
       [name]: value,
     }));
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    setError("");
   };
 
-  // Submit enrollment
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.student) {
+      errors.student = "Please select a student.";
+    }
+
+    if (!formData.course) {
+      errors.course = "Please select a course.";
+    }
+
+    if (!formData.enrollmentDate) {
+      errors.enrollmentDate = "Enrollment date is required.";
+    } else {
+      const selectedDate = new Date(
+        `${formData.enrollmentDate}T00:00:00`
+      );
+
+      if (Number.isNaN(selectedDate.getTime())) {
+        errors.enrollmentDate = "Enter a valid enrollment date.";
+      } else if (selectedDate > new Date()) {
+        errors.enrollmentDate = "Enrollment date cannot be in the future.";
+      }
+    }
+
+    if (!["Active", "Completed", "Cancelled"].includes(formData.status)) {
+      errors.status = "Please select a valid enrollment status.";
+    }
+
+    setFieldErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (!validateForm()) return;
 
     try {
       setLoading(true);
-      setError("");
 
       await createEnrollment(formData);
 
       alert("Student enrolled successfully!");
-
       navigate("/dashboard/enrollments");
     } catch (error) {
       console.error("Enrollment error:", error);
@@ -103,7 +143,7 @@ function AddEnrollment() {
       <div className="form-container">
         {error && <p className="error-message">{error}</p>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label>Select Student *</label>
 
@@ -111,7 +151,7 @@ function AddEnrollment() {
               name="student"
               value={formData.student}
               onChange={handleChange}
-              required
+              className={fieldErrors.student ? "is-invalid" : ""}
             >
               <option value="">Choose Student</option>
 
@@ -121,6 +161,10 @@ function AddEnrollment() {
                 </option>
               ))}
             </select>
+
+            {fieldErrors.student && (
+              <small className="text-danger">{fieldErrors.student}</small>
+            )}
           </div>
 
           <div className="form-group">
@@ -130,7 +174,7 @@ function AddEnrollment() {
               name="course"
               value={formData.course}
               onChange={handleChange}
-              required
+              className={fieldErrors.course ? "is-invalid" : ""}
             >
               <option value="">Choose Course</option>
 
@@ -140,6 +184,10 @@ function AddEnrollment() {
                 </option>
               ))}
             </select>
+
+            {fieldErrors.course && (
+              <small className="text-danger">{fieldErrors.course}</small>
+            )}
           </div>
 
           <div className="form-group">
@@ -150,8 +198,15 @@ function AddEnrollment() {
               name="enrollmentDate"
               value={formData.enrollmentDate}
               onChange={handleChange}
-              required
+              max={new Date().toLocaleDateString("en-CA")}
+              className={fieldErrors.enrollmentDate ? "is-invalid" : ""}
             />
+
+            {fieldErrors.enrollmentDate && (
+              <small className="text-danger">
+                {fieldErrors.enrollmentDate}
+              </small>
+            )}
           </div>
 
           <div className="form-group">
@@ -161,11 +216,16 @@ function AddEnrollment() {
               name="status"
               value={formData.status}
               onChange={handleChange}
+              className={fieldErrors.status ? "is-invalid" : ""}
             >
               <option value="Active">Active</option>
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
+
+            {fieldErrors.status && (
+              <small className="text-danger">{fieldErrors.status}</small>
+            )}
           </div>
 
           <div className="form-actions">
@@ -176,9 +236,8 @@ function AddEnrollment() {
             <button
               type="button"
               className="secondary-btn"
-              onClick={() =>
-                navigate("/dashboard/enrollments")
-              }
+              onClick={() => navigate("/dashboard/enrollments")}
+              disabled={loading}
             >
               Cancel
             </button>

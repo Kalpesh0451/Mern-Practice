@@ -1,20 +1,34 @@
+
 # Dependencies
 node_modules/
 client/node_modules/
 server/node_modules/
 
-# Environment variables
+# Environment variables and secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+client/.env
+server/.env
+client/.env.*
+server/.env.*
 
 # Build files
 client/dist/
 server/dist/
+build/
 
 # Logs
+*.log
 npm-debug.log*
-yarn-debug.log*
 
-# System files
+# OS and editor files
 .DS_Store
+.vscode/
+
+# Uploaded files
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Test coverage
+coverage/

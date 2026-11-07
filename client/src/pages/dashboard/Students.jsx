@@ -1,12 +1,21 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getStudents,
   deleteStudent,
 } from "../../services/studentService";
+import { useAuth } from "../../context/AuthContext";
+
+const SERVER_URL = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5001"
+).replace(/\/$/, "");
 
 function Students() {
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "Admin";
+  const canManage = ["Admin", "Staff"].includes(user?.role);
+
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -38,6 +47,8 @@ function Students() {
   }, [currentPage]);
 
   const handleDelete = async (student) => {
+    if (!isAdmin) return;
+
     const confirmed = window.confirm(
       `Are you sure you want to delete ${student.fullName}?`
     );
@@ -80,9 +91,14 @@ function Students() {
           </p>
         </div>
 
-        <Link to="/dashboard/add-student" className="btn btn-primary">
-          + Add Student
-        </Link>
+        {canManage && (
+          <Link
+            to="/dashboard/add-student"
+            className="btn btn-primary"
+          >
+            + Add Student
+          </Link>
+        )}
       </div>
 
       <hr />
@@ -110,7 +126,7 @@ function Students() {
               <thead className="table-light">
                 <tr>
                   <th>Student ID</th>
-                  <th>Full Name</th>
+                  <th>Student</th>
                   <th>Email</th>
                   <th>Mobile Number</th>
                   <th>Gender</th>
@@ -121,39 +137,86 @@ function Students() {
 
               <tbody>
                 {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
-                    <tr key={student._id}>
-                      <td>{student.studentId}</td>
-                      <td>{student.fullName}</td>
-                      <td>{student.email}</td>
-                      <td>{student.mobileNumber}</td>
-                      <td>{student.gender}</td>
-                      <td>{student.address}</td>
-                      <td>
-                        <div className="d-flex gap-2">
-  <Link
-    to={`/dashboard/view-student/${student.studentId}`}
-    className="btn btn-sm btn-outline-success"
-  >
-    View
-  </Link>
+                  filteredStudents.map((student) => {
+                    const imageUrl = student.profileImage
+                      ? `${SERVER_URL}${student.profileImage}`
+                      : "";
 
-  <Link
-    to={`/dashboard/edit-student/${student.studentId}`}
-    className="btn btn-sm btn-outline-primary"
-  >
-    Edit
-  </Link>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(student)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                    return (
+                      <tr key={student._id}>
+                        <td>{student.studentId}</td>
+
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={student.fullName}
+                                className="rounded-circle border"
+                                style={{
+                                  width: "42px",
+                                  height: "42px",
+                                  objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="rounded-circle bg-light border d-flex align-items-center justify-content-center"
+                                style={{
+                                  width: "42px",
+                                  height: "42px",
+                                  minWidth: "42px",
+                                }}
+                              >
+                                <strong>
+                                  {student.fullName?.charAt(0)?.toUpperCase()}
+                                </strong>
+                              </div>
+                            )}
+
+                            <span>{student.fullName}</span>
+                          </div>
+                        </td>
+
+                        <td>{student.email}</td>
+                        <td>{student.mobileNumber}</td>
+                        <td>{student.gender}</td>
+                        <td>{student.address}</td>
+
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Link
+                              to={`/dashboard/view-student/${student.studentId}`}
+                              className="btn btn-sm btn-outline-success"
+                            >
+                              View
+                            </Link>
+
+                            {canManage && (
+                              <Link
+                                to={`/dashboard/edit-student/${student.studentId}`}
+                                className="btn btn-sm btn-outline-primary"
+                              >
+                                Edit
+                              </Link>
+                            )}
+
+                            {isAdmin && (
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => handleDelete(student)}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="7" className="text-center py-4">

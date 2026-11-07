@@ -10,19 +10,15 @@ const {
   deleteEnrollment,
 } = require("../controllers/enrollmentController");
 
-// Create enrollment
-router.post("/", createEnrollment);
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
-// Get all enrollments
-router.get("/", getAllEnrollments);
+router.post("/", protect, authorizeRoles("Admin", "Staff"), createEnrollment);
 
-// Get enrollment by ID
-router.get("/:id", getEnrollmentById);
+router.get("/", protect, authorizeRoles("Admin", "Staff", "Viewer"), getAllEnrollments);
+router.get("/:id", protect, authorizeRoles("Admin", "Staff", "Viewer"), getEnrollmentById);
 
-// Update enrollment
-router.put("/:id", updateEnrollment);
+router.put("/:id", protect, authorizeRoles("Admin", "Staff"), updateEnrollment);
 
-// Delete enrollment
-router.delete("/:id", deleteEnrollment);
+router.delete("/:id", protect, authorizeRoles("Admin"), deleteEnrollment);
 
 module.exports = router;

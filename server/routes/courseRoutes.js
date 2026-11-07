@@ -10,19 +10,22 @@ const {
   deleteCourse,
 } = require("../controllers/courseController");
 
-// Create Course
-router.post("/", createCourse);
+const {
+  protect,
+  authorizeRoles,
+} = require("../middleware/authMiddleware");
 
-// Get All Courses
-router.get("/", getAllCourses);
+// Admin and Staff
+router.post("/", protect, authorizeRoles("Admin", "Staff"), createCourse);
 
-// Get Course By ID
-router.get("/:id", getCourseById);
+// Admin, Staff and Viewer
+router.get("/", protect, authorizeRoles("Admin", "Staff", "Viewer"), getAllCourses);
+router.get("/:id", protect, authorizeRoles("Admin", "Staff", "Viewer"), getCourseById);
 
-// Update Course
-router.put("/:id", updateCourse);
+// Admin and Staff
+router.put("/:id", protect, authorizeRoles("Admin", "Staff"), updateCourse);
 
-// Delete Course
-router.delete("/:id", deleteCourse);
+// Admin only
+router.delete("/:id", protect, authorizeRoles("Admin"), deleteCourse);
 
 module.exports = router;

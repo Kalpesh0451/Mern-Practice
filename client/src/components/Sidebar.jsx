@@ -1,7 +1,6 @@
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  FaGraduationCap,
   FaHome,
   FaUsers,
   FaBook,
@@ -12,48 +11,30 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 
+import { useAuth } from "../context/AuthContext";
+
 function Sidebar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   const menuItems = [
-    {
-      name: "Dashboard",
-      path: "/dashboard",
-      icon: <FaHome />,
-    },
-    {
-      name: "Students",
-      path: "/dashboard/students",
-      icon: <FaUsers />,
-    },
-    {
-      name: "Courses",
-      path: "/dashboard/courses",
-      icon: <FaBook />,
-    },
-    {
-      name: "Instructors",
-      path: "/dashboard/instructors",
-      icon: <FaChalkboardTeacher />,
-    },
-    {
-      name: "Enrollments",
-      path: "/dashboard/enrollments",
-      icon: <FaClipboardList />,
-    },
-    {
-      name: "Reports",
-      path: "/dashboard/reports",
-      icon: <FaChartBar />,
-    },
+    { name: "Dashboard", path: "/dashboard", icon: <FaHome /> },
+    { name: "Students", path: "/dashboard/students", icon: <FaUsers /> },
+    { name: "Courses", path: "/dashboard/courses", icon: <FaBook /> },
+    { name: "Instructors", path: "/dashboard/instructors", icon: <FaChalkboardTeacher /> },
+    { name: "Enrollments", path: "/dashboard/enrollments", icon: <FaClipboardList /> },
+    { name: "Reports", path: "/dashboard/reports", icon: <FaChartBar /> },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <aside className="admin-sidebar">
       <div className="sidebar-brand">
-       <img
-  src="/logo.png"
-  alt="EduSphere Logo"
-  className="sidebar-logo"
-/>
+        <img src="/logo.png" alt="EduSphere Logo" className="sidebar-logo" />
         <span>EduSphere</span>
       </div>
 
@@ -76,18 +57,29 @@ function Sidebar() {
       </nav>
 
       <div className="sidebar-bottom">
-        <NavLink
-          to="/dashboard/settings"
-          className="sidebar-link"
-        >
+        <div className="sidebar-user">
+          <strong>{user?.fullName || "User"}</strong>
+          <small>{user?.role || "Member"}</small>
+        </div>
+
+        <NavLink to="/dashboard/settings" className="sidebar-link">
           <FaCog />
           <span>Settings</span>
         </NavLink>
 
         <NavLink to="/" className="sidebar-link">
-          <FaSignOutAlt />
+          <FaHome />
           <span>Back to Website</span>
         </NavLink>
+
+        <button
+          type="button"
+          className="sidebar-link sidebar-logout"
+          onClick={handleLogout}
+        >
+          <FaSignOutAlt />
+          <span>Logout</span>
+        </button>
       </div>
     </aside>
   );

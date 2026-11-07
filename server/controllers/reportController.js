@@ -1,48 +1,64 @@
+
 const Student = require("../models/Student");
 const Course = require("../models/Course");
-const Instructor = require("../models/Instructor");
+const Enrollment = require("../models/Enrollment");
 
-// Get dashboard statistics
+// Dashboard overview
 const getDashboardStats = async (req, res) => {
   try {
-    // Total records
-    const totalStudents = await Student.countDocuments();
-    const totalCourses = await Course.countDocuments();
-    const totalInstructors = await Instructor.countDocuments();
+    const [
+      totalStudents,
+      totalCourses,
+      totalEnrollments,
+      activeCourses,
+      activeEnrollments,
+      completedEnrollments,
+      cancelledEnrollments,
+      recentEnrollments,
+      courses,
+    ] = await Promise.all([
+      Student.countDocuments(),
+      Course.countDocuments(),
+      Enrollment.countDocuments(),
+      Course.countDocuments({ status: "Active" }),
+      Enrollment.countDocuments({ status: "Active" }),
+      Enrollment.countDocuments({ status: "Completed" }),
+      Enrollment.countDocuments({ status: "Cancelled" }),
 
-    // Course statistics
-    const activeCourses = await Course.countDocuments({
-      status: "Active",
-    });
+      Enrollment.find()
+        .populate("student", "studentId fullName email")
+        .populate("course", "courseName courseCode")
+        .sort({ createdAt: -1 })
+        .limit(5),
 
-    const inactiveCourses = await Course.countDocuments({
-      status: "Inactive",
-    });
+      Course.find().select("courseName courseCode"),
+    ]);
 
-    // Instructor statistics
-    const activeInstructors = await Instructor.countDocuments({
-      status: "Active",
-    });
-
-    const inactiveInstructors = await Instructor.countDocuments({
-      status: "Inactive",
-    });
+    const courseDistribution = await Promise.all(
+      courses.map(async (course) => ({
+        courseName: course.courseName,
+        courseCode: course.courseCode,
+        enrollmentCount: await Enrollment.countDocuments({
+          course: course._id,
+        }),
+      }))
+    );
 
     res.status(200).json({
       success: true,
-      statistics: {
+      stats: {
         totalStudents,
         totalCourses,
-        totalInstructors,
+        totalEnrollments,
         activeCourses,
-        inactiveCourses,
-        activeInstructors,
-        inactiveInstructors,
+        activeEnrollments,
+        completedEnrollments,
+        cancelledEnrollments,
       },
+      recentEnrollments,
+      courseDistribution,
     });
   } catch (error) {
-    console.error("Dashboard statistics error:", error);
-
     res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard statistics",
@@ -51,59 +67,66 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-// Get monthly student enrollment statistics
+// Enrollment trend for the last six months
 const getEnrollmentTrend = async (req, res) => {
   try {
-    const enrollmentData = await Student.aggregate([
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const trend = await Enrollment.aggregate([
+      {
+        $match: {
+          enrollmentDate: { $gte: sixMonthsAgo },
+        },
+      },
       {
         $group: {
           _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
+            year: { $year: "$enrollmentDate" },
+            month: { $month: "$enrollmentDate" },
           },
-          totalStudents: { $sum: 1 },
+          total: { $sum: 1 },
         },
       },
-      {
-        $sort: {
-          "_id.year": 1,
-          "_id.month": 1,
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          year: "$_id.year",
-          month: "$_id.month",
-          totalStudents: 1,
-        },
-      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
 
-    const formattedData = enrollmentData.map((item) => ({
-      month: new Date(
-        item.year,
-        item.month - 1
-      ).toLocaleString("en-US", {
-        month: "short",
-        year: "numeric",
-      }),
-      totalStudents: item.totalStudents,
-    }));
+    const enrollmentTrend = [];
+
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(sixMonthsAgo);
+      date.setMonth(date.getMonth() + i);
+
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+
+      const record = trend.find(
+        (item) =>
+          item._id.year === year && item._id.month === month
+      );
+
+      enrollmentTrend.push({
+        month: date.toLocaleString("en-US", { month: "short" }),
+        year,
+        enrollments: record ? record.total : 0,
+      });
+    }
 
     res.status(200).json({
       success: true,
-      enrollmentData: formattedData,
+      enrollmentTrend,
     });
   } catch (error) {
-    console.error("Enrollment trend error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to fetch enrollment statistics",
+      message: "Failed to fetch enrollment trend",
+      error: error.message,
     });
   }
 };
+
 module.exports = {
   getDashboardStats,
   getEnrollmentTrend,

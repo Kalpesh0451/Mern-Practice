@@ -1,12 +1,18 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   getCourses,
   deleteCourse,
 } from "../../services/courseService";
 
 function Courses() {
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "Admin";
+  const canManage = ["Admin", "Staff"].includes(user?.role);
+
   const [courses, setCourses] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -33,6 +39,8 @@ function Courses() {
   }, []);
 
   const handleDelete = async (course) => {
+    if (!isAdmin) return;
+
     const confirmed = window.confirm(
       `Are you sure you want to delete ${course.courseName}?`
     );
@@ -68,12 +76,14 @@ function Courses() {
           </p>
         </div>
 
-        <Link
-          to="/dashboard/add-course"
-          className="btn btn-primary"
-        >
-          + Add Course
-        </Link>
+        {canManage && (
+          <Link
+            to="/dashboard/add-course"
+            className="btn btn-primary"
+          >
+            + Add Course
+          </Link>
+        )}
       </div>
 
       <hr />
@@ -117,36 +127,42 @@ function Courses() {
                     <td>{course.duration}</td>
                     <td>₹{course.fees}</td>
                     <td>
-                      <span className={`badge ${
-                        course.status === "Active"
-                          ? "bg-success"
-                          : "bg-secondary"
-                      }`}>
+                      <span
+                        className={`badge ${
+                          course.status === "Active"
+                            ? "bg-success"
+                            : "bg-secondary"
+                        }`}
+                      >
                         {course.status}
                       </span>
                     </td>
                     <td>
-                    
                       <div className="d-flex gap-2">
-                       <Link
-  to={`/dashboard/view-course/${course._id}`}
-  className="btn btn-sm btn-outline-success"
->
-  View
-</Link>
                         <Link
-                          to={`/dashboard/edit-course/${course._id}`}
-                          className="btn btn-sm btn-outline-primary"
+                          to={`/dashboard/view-course/${course._id}`}
+                          className="btn btn-sm btn-outline-success"
                         >
-                          Edit
+                          View
                         </Link>
 
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(course)}
-                        >
-                          Delete
-                        </button>
+                        {canManage && (
+                          <Link
+                            to={`/dashboard/edit-course/${course._id}`}
+                            className="btn btn-sm btn-outline-primary"
+                          >
+                            Edit
+                          </Link>
+                        )}
+
+                        {isAdmin && (
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDelete(course)}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

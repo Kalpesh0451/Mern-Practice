@@ -1,12 +1,18 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   getAllEnrollments,
   deleteEnrollment,
 } from "../../services/enrollmentService";
 
 function Enrollments() {
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "Admin";
+  const canManage = ["Admin", "Staff"].includes(user?.role);
+
   const [enrollments, setEnrollments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -34,6 +40,8 @@ function Enrollments() {
   }, []);
 
   const handleDelete = async (id) => {
+    if (!isAdmin) return;
+
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this enrollment?"
     );
@@ -77,12 +85,14 @@ function Enrollments() {
           </p>
         </div>
 
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/dashboard/enrollments/add")}
-        >
-          + Add Enrollment
-        </button>
+        {canManage && (
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate("/dashboard/enrollments/add")}
+          >
+            + Add Enrollment
+          </button>
+        )}
       </div>
 
       <div className="table-container">
@@ -159,25 +169,29 @@ function Enrollments() {
                             View
                           </button>
 
-                          <button
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/enrollments/edit/${enrollment._id}`
-                              )
-                            }
-                          >
-                            Edit
-                          </button>
+                          {canManage && (
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/enrollments/edit/${enrollment._id}`
+                                )
+                              }
+                            >
+                              Edit
+                            </button>
+                          )}
 
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() =>
-                              handleDelete(enrollment._id)
-                            }
-                          >
-                            Delete
-                          </button>
+                          {isAdmin && (
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() =>
+                                handleDelete(enrollment._id)
+                              }
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

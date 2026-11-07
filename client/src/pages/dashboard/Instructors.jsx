@@ -1,39 +1,48 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   getInstructors,
   deleteInstructor,
 } from "../../services/instructorService";
 
 function Instructors() {
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "Admin";
+  const canManage = ["Admin", "Staff"].includes(user?.role);
+
   const [instructors, setInstructors] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
- const fetchInstructors = async () => {
-  try {
-    const data = await getInstructors();
+  const fetchInstructors = async () => {
+    try {
+      const data = await getInstructors();
 
-    console.log("Instructor API Response:", data);
+      console.log("Instructor API Response:", data);
 
-    const instructorList = Array.isArray(data)
-      ? data
-      : data.instructors || data.data || [];
+      const instructorList = Array.isArray(data)
+        ? data
+        : data.instructors || data.data || [];
 
-    setInstructors(instructorList);
-  } catch (error) {
-    console.error("Error fetching instructors:", error);
-    alert("Failed to load instructors");
-  } finally {
-    setLoading(false);
-  }
-};
+      setInstructors(instructorList);
+    } catch (error) {
+      console.error("Error fetching instructors:", error);
+      alert("Failed to load instructors");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchInstructors();
   }, []);
 
   const handleDelete = async (id) => {
+    if (!isAdmin) return;
+
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this instructor?"
     );
@@ -70,9 +79,14 @@ function Instructors() {
           </p>
         </div>
 
-        <Link to="/dashboard/add-instructor" className="btn btn-primary">
-          + Add Instructor
-        </Link>
+        {canManage && (
+          <Link
+            to="/dashboard/add-instructor"
+            className="btn btn-primary"
+          >
+            + Add Instructor
+          </Link>
+        )}
       </div>
 
       <div className="card shadow-sm border-0">
@@ -130,19 +144,23 @@ function Instructors() {
                             View
                           </Link>
 
-                          <Link
-                            to={`/dashboard/edit-instructor/${instructor._id}`}
-                            className="btn btn-sm btn-outline-primary"
-                          >
-                            Edit
-                          </Link>
+                          {canManage && (
+                            <Link
+                              to={`/dashboard/edit-instructor/${instructor._id}`}
+                              className="btn btn-sm btn-outline-primary"
+                            >
+                              Edit
+                            </Link>
+                          )}
 
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(instructor._id)}
-                          >
-                            Delete
-                          </button>
+                          {isAdmin && (
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDelete(instructor._id)}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

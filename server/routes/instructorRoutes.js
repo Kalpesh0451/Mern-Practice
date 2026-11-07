@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router();
 
@@ -9,19 +10,15 @@ const {
   deleteInstructor,
 } = require("../controllers/instructorController");
 
-// Create instructor
-router.post("/", createInstructor);
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
-// Get all instructors
-router.get("/", getAllInstructors);
+router.post("/", protect, authorizeRoles("Admin", "Staff"), createInstructor);
 
-// Get instructor by ID
-router.get("/:id", getInstructorById);
+router.get("/", protect, authorizeRoles("Admin", "Staff", "Viewer"), getAllInstructors);
+router.get("/:id", protect, authorizeRoles("Admin", "Staff", "Viewer"), getInstructorById);
 
-// Update instructor
-router.put("/:id", updateInstructor);
+router.put("/:id", protect, authorizeRoles("Admin", "Staff"), updateInstructor);
 
-// Delete instructor
-router.delete("/:id", deleteInstructor);
+router.delete("/:id", protect, authorizeRoles("Admin"), deleteInstructor);
 
 module.exports = router;

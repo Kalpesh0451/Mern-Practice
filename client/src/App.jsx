@@ -1,7 +1,9 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -9,6 +11,7 @@ import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Students from "./pages/dashboard/Students";
@@ -28,6 +31,7 @@ import Enrollments from "./pages/dashboard/Enrollments";
 import AddEnrollment from "./pages/dashboard/AddEnrollment";
 import ViewEnrollment from "./pages/dashboard/ViewEnrollment";
 import EditEnrollment from "./pages/dashboard/EditEnrollment";
+import Users from "./pages/dashboard/Users";
 
 function App() {
   return (
@@ -42,32 +46,46 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Route>
 
-        {/* Admin Dashboard */}
-       <Route path="/dashboard" element={<DashboardLayout />}>
-  <Route index element={<Dashboard />} />
-  <Route path="students" element={<Students />} />
-  <Route path="add-student" element={<AddStudent />} />
-  <Route path="view-student/:id" element={<ViewStudent />} />
-  <Route path="edit-student/:id" element={<EditStudent />} />
-  <Route path="courses" element={<Courses />} />
-  <Route path="instructors" element={<Instructors />} />
-  <Route path="add-course" element={<AddCourse />} />
-  <Route path="edit-course/:id" element={<EditCourse />} />
-  <Route path="view-course/:id" element={<ViewCourse />} />
-  <Route path="add-instructor" element={<AddInstructor />} />
-  <Route path="edit-instructor/:id" element={<EditInstructor />} />
-  <Route path="view-instructor/:id" element={<ViewInstructor />} />
-  <Route path="reports" element={<Reports />} />
-  <Route path="enrollments" element={<Enrollments />} />
-  <Route path="enrollments/add" element={<AddEnrollment />} />
-  <Route path="enrollments/:id" element={<ViewEnrollment />} />
-  <Route path="enrollments/edit/:id" element={<EditEnrollment />} />
+        {/* Login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected Dashboard */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="students" element={<Students />} />
+            <Route path="add-student" element={<AddStudent />} />
+            <Route path="view-student/:id" element={<ViewStudent />} />
+            <Route path="edit-student/:id" element={<EditStudent />} />
+
+            <Route path="courses" element={<Courses />} />
+            <Route path="add-course" element={<AddCourse />} />
+            <Route path="edit-course/:id" element={<EditCourse />} />
+            <Route path="view-course/:id" element={<ViewCourse />} />
+
+            <Route path="instructors" element={<Instructors />} />
+            <Route path="add-instructor" element={<AddInstructor />} />
+            <Route path="edit-instructor/:id" element={<EditInstructor />} />
+            <Route path="view-instructor/:id" element={<ViewInstructor />} />
+
+            <Route path="reports" element={<Reports />} />
+
+            <Route path="enrollments" element={<Enrollments />} />
+            <Route path="enrollments/add" element={<AddEnrollment />} />
+            <Route path="enrollments/:id" element={<ViewEnrollment />} />
+            <Route path="enrollments/edit/:id" element={<EditEnrollment />} />
+
+            {/* Admin-only User Management */}
+<Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
+  <Route path="users" element={<Users />} />
 </Route>
+          </Route>
+        </Route>
 
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
 }
- 
+
 export default App;

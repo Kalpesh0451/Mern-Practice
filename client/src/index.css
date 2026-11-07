@@ -275,3 +275,28 @@
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
+.sidebar-logout {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.sidebar-logout:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-user {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.sidebar-user small {
+  color: #aebbd0;
+  margin-top: 4px;
+}
