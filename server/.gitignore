@@ -3,11 +3,20 @@ node_modules/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+
+# Build files
+dist/
+build/
+coverage/
 
 # Logs
 *.log
 npm-debug.log*
 
-# Generated files
-coverage/
+# Mac files
 .DS_Store
+
+# Editor settings
+.vscode/
