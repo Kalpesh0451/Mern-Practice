@@ -1,211 +1,67 @@
 # EduSphere – Student Management System
 
-A full-stack Student Management System developed using the MERN stack (MongoDB, Express.js, React.js, and Node.js). EduSphere provides a centralized platform to manage students, courses, instructors, enrollments, users, and academic reports.
+A MERN-stack academic administration application built with MongoDB, Express.js, React.js and Node.js.
 
-## 1. Project Overview
+## Main modules
+- Dashboard and reports
+- Student management
+- Course management
+- Instructor management
+- Enrollment management
+- Authentication and role-based access
+- Admin user management
+- Student profile image upload
+- Enrollment email notifications
 
-EduSphere is designed to simplify academic administration through a centralized dashboard and management interface. It provides CRUD operations, authentication, role-based access control, reporting, profile image uploads, and enrollment email notifications.
+> Confirm each feature against the final code before submission. Dashboard summary figures and any sample/placeholder values should be clearly identified if they are not database-driven.
 
-**Project:** EduSphere – Student Management System  
-**Technology:** MERN Stack  
-**Developer:** Kalpesh Dipak Patil  
-**Purpose:** MERN Stack Training Project – GetSphere Technologies
+## Technology stack
+**Frontend:** React, Vite, JavaScript, React Router, Axios, Bootstrap/CSS, Chart.js (where used).  
+**Backend:** Node.js, Express.js, Mongoose, MongoDB, JWT, bcrypt, Multer, Nodemailer.  
+**Testing/tools:** Jest, Supertest, Postman, Git, GitHub, MongoDB Atlas.
 
-## 2. Features
-
-### 2.1 Dashboard
-- Overview of system statistics.
-- Student, course, instructor, and enrollment summaries.
-- Active and inactive course statistics.
-- Enrollment trends and course-wise distribution.
-- Recent enrollment information.
-
-### 2.2 Student Management
-- Add, view, update, and delete student records.
-- Automatically generate student IDs.
-- Validate student information.
-- Upload and display student profile images.
-- Search and manage student records.
-
-### 2.3 Course Management
-- Add, view, update, and delete courses.
-- Manage course information, fees, and status.
-- Validate course information.
-
-### 2.4 Instructor Management
-- Add, view, update, and delete instructor records.
-- Manage instructor details, specialization, qualification, and experience.
-- Validate instructor information.
-
-### 2.5 Enrollment Management
-- Enroll students in courses.
-- View and update enrollment details.
-- Manage enrollment dates and statuses.
-- Prevent duplicate student-course enrollments.
-- Send enrollment confirmation emails.
-
-### 2.6 Reports and Analytics
-- Dashboard statistics.
-- Course and instructor status reports.
-- Student enrollment trends.
-- Visual charts using Chart.js.
-
-### 2.7 Authentication and Authorization
-- JWT-based user authentication.
-- Password hashing using bcrypt.
-- Protected application routes.
-- Role-based access control.
-
-| Permission | Admin | Staff | Viewer |
-|---|---|---|---|
-| View records | Yes | Yes | Yes |
-| Add records | Yes | Yes | No |
-| Edit records | Yes | Yes | No |
-| Delete records | Yes | No | No |
-| Manage users | Yes | No | No |
-
-### 2.8 User Management
-- Manage application user accounts.
-- Manage user roles.
-- Activate and deactivate accounts.
-
-## 3. Technologies Used
-
-**Frontend**
-- React.js
-- Vite
-- JavaScript
-- HTML5 and CSS3
-- Axios
-- React Router
-- Chart.js
-
-**Backend**
-- Node.js
-- Express.js
-- REST APIs
-- Mongoose
-
-**Database**
-- MongoDB
-- MongoDB Atlas
-
-**Authentication and Additional Libraries**
-- JSON Web Token (JWT)
-- bcrypt
-- Multer
-- Nodemailer
-- Helmet
-- CORS
-
-**Testing**
-- Jest
-- Supertest
-- Postman
-
-**Development Tools**
-- Visual Studio Code
-- Git and GitHub
-
-## 4. Application Architecture
-
-EduSphere follows a client-server architecture.
-
-1. The user interacts with the React frontend.
-2. Axios sends HTTP requests to the Express backend.
-3. Routes direct requests to the appropriate controllers.
-4. Middleware handles authentication, authorization, and request processing.
-5. Controllers execute application logic.
-6. Mongoose communicates with MongoDB.
-7. The backend returns JSON responses to the frontend.
-
-## 5. Project Structure
-
-```text
-mern-practice/
-│
-├── client/
-│   ├── public/
-│   └── src/
-│       ├── components/
-│       ├── context/
-│       ├── layouts/
-│       ├── pages/
-│       ├── services/
-│       ├── App.jsx
-│       └── main.jsx
-│
-├── server/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── scripts/
-│   ├── services/
-│   ├── tests/
-│   ├── uploads/
-│   ├── app.js
-│   └── server.js
-│
-├── .gitignore
-└── README.md
-```
-
-*This is a representative structure. Refer to the repository for the complete file structure.*
-
-## 6. Installation and Setup
-
-### Prerequisites
+## Requirements
 - Node.js and npm
-- MongoDB Atlas account or a MongoDB instance
+- MongoDB Atlas account or a reachable MongoDB instance
 - Git
-- Visual Studio Code
 
-### Step 1: Clone the Repository
+## Setup
 
+### 1. Clone
 ```bash
-git clone https://github.com/Kalpesh0451/Mern-Practice.git
-cd Mern-Practice
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd mern-practice
 ```
 
-### Step 2: Backend Setup
-
+### 2. Backend
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file inside the `server` directory and configure the following variables:
+Create `server/.env` locally. Do not commit this file.
 
 ```env
 PORT=5001
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secure_jwt_secret
+MONGO_URI=<YOUR_MONGODB_CONNECTION_STRING>
+JWT_SECRET=<LONG_RANDOM_SECRET>
 CLIENT_URL=http://localhost:5173
-
-EMAIL_USER=your_email_address
-EMAIL_PASS=your_gmail_app_password
-
-ADMIN_NAME=Administrator
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=your_secure_admin_password
+EMAIL_USER=<YOUR_GMAIL_ADDRESS>
+EMAIL_PASS=<YOUR_GMAIL_APP_PASSWORD>
+ADMIN_NAME=<INITIAL_ADMIN_NAME>
+ADMIN_EMAIL=<INITIAL_ADMIN_EMAIL>
+ADMIN_PASSWORD=<INITIAL_ADMIN_PASSWORD>
 ```
 
-Replace the placeholder values with your own configuration. Never commit the actual `.env` file or share credentials publicly.
-
-Start the backend:
-
+Start the backend using the script defined in `server/package.json`, typically:
 ```bash
 npm run dev
 ```
 
-Backend URL: `http://localhost:5001`
+Backend base URL: `http://localhost:5001`
 
-### Step 3: Frontend Setup
-
-Open another terminal from the project root:
-
+### 3. Frontend
+Open a second terminal:
 ```bash
 cd client
 npm install
@@ -214,142 +70,78 @@ npm run dev
 
 Frontend URL: `http://localhost:5173`
 
-## 7. MongoDB Configuration
-
-1. Create a MongoDB Atlas account.
-2. Create a database cluster.
-3. Create a database user with appropriate permissions.
-4. Configure Network Access for your development environment.
-5. Copy the MongoDB connection string.
-6. Add the connection string to `MONGO_URI` in the backend `.env` file.
-
-Do not expose your MongoDB credentials or connection string in the repository.
-
-## 8. Email Configuration
-
-EduSphere uses Nodemailer with Gmail SMTP for enrollment confirmation emails.
-
-1. Use a Gmail account for SMTP configuration.
-2. Enable two-step verification.
-3. Generate a Google App Password.
-4. Configure `EMAIL_USER` and `EMAIL_PASS` in the backend `.env` file.
-5. Verify email functionality by creating a test enrollment.
-
-Never publish your email password or App Password.
-
-## 9. API Modules
-
-The backend provides REST API modules for:
-
-| Module | Base endpoint |
-|---|---|
-| Authentication | `/api/auth` |
-| Students | `/api/students` |
-| Courses | `/api/courses` |
-| Instructors | `/api/instructors` |
-| Enrollments | `/api/enrollments` |
-| Reports | `/api/reports` |
-| User Management | `/api/users` |
-
-For detailed endpoint methods, request bodies, authentication headers, and sample responses, refer to the API documentation included with the project submission.
-
-## 10. Database Collections
-
-EduSphere uses MongoDB collections managed through Mongoose models.
-
-| Collection | Purpose |
-|---|---|
-| Students | Student details and profile information |
-| Courses | Course information and status |
-| Instructors | Instructor information |
-| Enrollments | Student-course enrollment records |
-| Users | Application user accounts and roles |
-| Counters | Sequential student ID generation |
-
-The Enrollment collection references Student and Course documents. A unique compound index prevents duplicate enrollment pairs.
-
-## 11. Security Measures
-
-The application includes the following reported security measures:
-
-- JWT-based authentication.
-- Password hashing using bcrypt.
-- Role-based authorization.
-- Helmet security headers.
-- CORS origin restrictions.
-- Environment variables for sensitive configuration.
-- Request body size limits.
-- Mongoose schema validation.
-- File upload restrictions.
-
-Rate-limiting configuration and additional production security checks should be verified before describing them as fully implemented.
-
-## 12. Automated Testing
-
-The backend uses Jest and Supertest for automated API testing.
-
-Run tests from the server directory:
-
+### 4. Tests
 ```bash
+cd server
 npm test
 ```
+Record the actual date and output from the final test run in the submission. A previously reported run passed 38 tests; rerun before claiming this as the final result.
 
-The latest previously reported test result was:
+## MongoDB Atlas configuration
+1. Create an Atlas project and cluster.
+2. Create a database user with a strong password and only the permissions needed by the application.
+3. Add the developer machine's current public IP to Network Access. Avoid `0.0.0.0/0` for a final submission unless there is a justified temporary requirement.
+4. Copy the MongoDB connection string and place it in `MONGO_URI` in `server/.env`.
+5. Replace the database name placeholder in the URI if necessary.
+6. Start the backend and verify the connection message.
 
-- Test suites passed: 1
-- Tests passed: 38
-- Tests failed: 0
+Never include a real connection string, username, password or secret in GitHub or this README.
 
-Run the test command again before submission and update this section if the result changes.
+## Email configuration (Gmail / Nodemailer)
+1. Use a dedicated Gmail account if possible.
+2. Enable Google 2-Step Verification.
+3. Generate an App Password if the account is eligible and organizational policy allows it.
+4. Put the Gmail address in `EMAIL_USER` and the App Password in `EMAIL_PASS`.
+5. Never use your normal Gmail password in source code.
+6. Test an enrollment email using a test recipient and check spam/junk if it is not received.
 
-## 13. Project Documentation and Supporting Materials
+## API overview
+The backend route groups include:
+- `/api/auth`
+- `/api/students`
+- `/api/courses`
+- `/api/instructors`
+- `/api/enrollments`
+- `/api/reports`
+- `/api/users`
 
-The project submission includes supporting material covering:
+See `API_DOCUMENTATION.md` and the Postman collection in `postman/`. Verify exact HTTP methods, route suffixes, request fields and response examples against the actual Express route files before submission.
 
-- Project documentation.
-- Database schema documentation.
-- API documentation and sample requests.
-- Security review.
-- Screenshots of major application pages.
-- Automated test results.
-- Known issues and incomplete features.
-- Application demonstration video.
+## Architecture
+React/Vite provides the UI and sends HTTP requests to the Express API. Express routes apply middleware (including authentication/authorization where configured), invoke controllers and interact with MongoDB through Mongoose models. Multer handles configured uploads; Nodemailer sends configured email notifications.
 
-Add the actual document paths or links below once these materials are uploaded:
+## Roles
+The project has Admin, Staff and Viewer roles. The intended permissions documented during development are:
+- View: Admin, Staff, Viewer
+- Add: Admin, Staff
+- Edit: Admin, Staff
+- Delete: Admin only
+- Manage users: Admin only
 
-- **Project Documentation:** `docs/Project_Documentation.pdf`
-- **Database Schema:** `docs/Database_Schema.pdf`
-- **API Documentation:** `docs/API_Documentation.pdf`
-- **Security Review:** `docs/Security_Review.pdf`
-- **Screenshots:** `screenshots/`
-- **Test Results:** `test-results/`
-- **Demo Video:** Add your Google Drive demonstration link here.
+Verify the final backend route middleware and UI restrictions match this matrix.
 
-## 14. Known Issues and Limitations
+## Repository hygiene
+Do not commit:
+- `.env` or any file containing credentials
+- `node_modules/`
+- build output, logs, coverage output
+- uploaded personal/student images unless they are approved demo assets
 
-Refer to `KNOWN_ISSUES.md` in the repository for the current list of verified bugs, incomplete features, and items requiring further testing.
+Check before pushing:
+```bash
+git status
+git ls-files server/.env
+git diff --cached --name-only
+```
 
-Do not treat unverified functionality as confirmed complete.
+If a secret was ever committed, removing it from the latest commit is not sufficient: rotate the exposed credential.
 
-## 15. Future Enhancements
-
-- Attendance management.
-- Student fee management.
-- PDF and Excel report exports.
-- Password reset functionality.
-- Advanced analytics.
-- Cloud-based image storage.
-- Production deployment.
-- Additional frontend and integration testing.
-
-## 16. Conclusion
-
-EduSphere demonstrates full-stack application development using the MERN stack. It brings together student, course, instructor, and enrollment management with authentication, role-based authorization, reporting, file uploads, email notifications, and automated backend testing.
-
-The project provides a centralized academic management platform and demonstrates practical knowledge of frontend development, backend API development, database operations, security, and testing.
-
----
-
-**EduSphere – Student Management System**  
-Developed by **Kalpesh Dipak Patil**  
-Prepared for **GetSphere Technologies**
+## Submission materials
+- GitHub repository: <YOUR_GITHUB_REPOSITORY_URL>
+- Demo video: <ADD_GOOGLE_DRIVE_VIEWER_LINK>
+- Screenshots: see `screenshots/`
+- Schema: `DATABASE_SCHEMA.md`
+- Features: `FEATURES.md`
+- API: `API_DOCUMENTATION.md` and `postman/`
+- Limitations: `KNOWN_ISSUES.md`
+- Security: `SECURITY_REVIEW.md`
