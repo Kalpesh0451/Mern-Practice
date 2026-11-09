@@ -1,3 +1,5 @@
+
+import { useEffect, useState } from "react";
 import {
   FaUsers,
   FaBook,
@@ -7,8 +9,13 @@ import {
 
 import { Link } from "react-router-dom";
 import StatCard from "../../components/StatCard";
+import { getStudents } from "../../services/studentService";
 
 function Dashboard() {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const stats = [
     {
       title: "Total Students",
@@ -40,16 +47,45 @@ function Dashboard() {
     },
   ];
 
-  const students = [
-    { id: "STU001", name: "Aarav Sharma", course: "Computer Science", status: "Active" },
-    { id: "STU002", name: "Diya Patel", course: "Data Science", status: "Active" },
-    { id: "STU003", name: "Rohan Verma", course: "Web Development", status: "Pending" },
-    { id: "STU004", name: "Ananya Singh", course: "Computer Science", status: "Active" },
-    { id: "STU005", name: "Rahul Mehta", course: "Data Analytics", status: "Inactive" },
-  ];
+  // Fetch actual students from MongoDB through the existing API
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchRecentStudents = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        // Fetch the first 5 records using the same service as Students.jsx
+        const response = await getStudents(1, 5);
+
+        if (isMounted) {
+          setStudents(response.data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(
+            err.response?.data?.message ||
+              "Failed to load recent students."
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchRecentStudents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div>
+      {/* Dashboard Heading */}
       <div className="dashboard-heading">
         <div>
           <h3>Dashboard Overview</h3>
@@ -61,6 +97,7 @@ function Dashboard() {
         </Link>
       </div>
 
+      {/* Statistics Cards */}
       <div className="row g-4 mb-4">
         {stats.map((stat) => (
           <div className="col-sm-6 col-xl-3" key={stat.title}>
@@ -69,11 +106,13 @@ function Dashboard() {
         ))}
       </div>
 
+      {/* Recent Students and Quick Actions */}
       <div className="row g-4">
         <div className="col-lg-8">
           <div className="dashboard-panel">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h5 className="fw-bold mb-0">Recent Students</h5>
+
               <Link to="/dashboard/students">View All</Link>
             </div>
 
@@ -83,46 +122,75 @@ function Dashboard() {
                   <tr>
                     <th>Student ID</th>
                     <th>Name</th>
-                    <th>Course</th>
-                    <th>Status</th>
+                    <th>Email</th>
+                    <th>Mobile Number</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {students.map((student) => (
-                    <tr key={student.id}>
-                      <td>{student.id}</td>
-                      <td className="fw-semibold">{student.name}</td>
-                      <td>{student.course}</td>
-                      <td>
-                        <span
-                          className={`status-badge ${student.status.toLowerCase()}`}
-                        >
-                          {student.status}
-                        </span>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="4" className="text-center py-4">
+                        Loading students...
                       </td>
                     </tr>
-                  ))}
+                  ) : error ? (
+                    <tr>
+                      <td colSpan="4" className="text-center text-danger py-4">
+                        {error}
+                      </td>
+                    </tr>
+                  ) : students.length > 0 ? (
+                    students.map((student) => (
+                      <tr key={student._id}>
+                        <td>{student.studentId}</td>
+
+                        <td className="fw-semibold">
+                          {student.fullName}
+                        </td>
+
+                        <td>{student.email}</td>
+
+                        <td>{student.mobileNumber}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center py-4">
+                        No students registered yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
+        {/* Quick Actions */}
         <div className="col-lg-4">
           <div className="dashboard-panel">
             <h5 className="fw-bold mb-4">Quick Actions</h5>
 
             <div className="quick-actions">
-              <Link to="/dashboard/add-student" className="quick-action">
+              <Link
+                to="/dashboard/add-student"
+                className="quick-action"
+              >
                 <FaUsers /> Register Student
               </Link>
 
-              <Link to="/dashboard/courses" className="quick-action">
+              <Link
+                to="/dashboard/courses"
+                className="quick-action"
+              >
                 <FaBook /> Manage Courses
               </Link>
 
-              <Link to="/dashboard/instructors" className="quick-action">
+              <Link
+                to="/dashboard/instructors"
+                className="quick-action"
+              >
                 <FaChalkboardTeacher /> Manage Instructors
               </Link>
             </div>
